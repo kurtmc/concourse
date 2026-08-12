@@ -406,10 +406,7 @@ func (c *Container) setupContainerdProcSpec(gdnProcSpec garden.ProcessSpec, cont
 	procSpec.Args = append([]string{gdnProcSpec.Path}, gdnProcSpec.Args...)
 	procSpec.Env = append(procSpec.Env, gdnProcSpec.Env...)
 
-	cwd := gdnProcSpec.Dir
-	if cwd == "" {
-		cwd = defaultProcessCwd
-	}
+	cwd := processCwd(gdnProcSpec.Dir)
 
 	procSpec.Cwd = cwd
 

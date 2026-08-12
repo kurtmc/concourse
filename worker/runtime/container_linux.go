@@ -10,9 +10,14 @@ import (
 const (
 	SuperuserPath = "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 	Path          = "PATH=/usr/local/bin:/usr/bin:/bin"
-
-	defaultProcessCwd = "/"
 )
+
+func processCwd(dir string) string {
+	if dir == "" {
+		return "/"
+	}
+	return dir
+}
 
 var pathRegexp = regexp.MustCompile("^PATH=.*$")
 

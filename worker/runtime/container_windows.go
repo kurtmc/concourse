@@ -2,7 +2,16 @@
 
 package runtime
 
-const defaultProcessCwd = `C:\`
+import (
+	bespec "github.com/concourse/concourse/worker/runtime/spec"
+)
+
+func processCwd(dir string) string {
+	if dir == "" {
+		return `C:\`
+	}
+	return bespec.WindowsContainerPath(dir)
+}
 
 // envWithDefaultPath never injects a PATH on Windows; the image's own
 // environment applies.

@@ -4,7 +4,9 @@ package spec
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"code.cloudfoundry.org/garden"
 	specs "github.com/opencontainers/runtime-spec/specs-go"
@@ -67,6 +69,16 @@ func OciSpec(initBinPath string, seccomp specs.LinuxSeccomp, seccompFuse specs.L
 	}, nil
 }
 
+// WindowsContainerPath converts the POSIX-style absolute container paths the
+// web node uses (e.g. /tmp/build/abc) to Windows container paths on the
+// system drive. Paths that are already Windows-style are left alone.
+func WindowsContainerPath(p string) string {
+	if strings.HasPrefix(p, "/") {
+		return "C:" + filepath.FromSlash(path.Clean(p))
+	}
+	return p
+}
+
 // OciSpecBindMounts converts garden bindmounts to oci spec mounts.
 func OciSpecBindMounts(bindMounts []garden.BindMount) (mounts []specs.Mount, err error) {
 	for _, bindMount := range bindMounts {
@@ -74,7 +86,9 @@ func OciSpecBindMounts(bindMounts []garden.BindMount) (mounts []specs.Mount, err
 			return nil, fmt.Errorf("src and dst must not be empty")
 		}
 
-		if !filepath.IsAbs(bindMount.SrcPath) || !filepath.IsAbs(bindMount.DstPath) {
+		dstPath := WindowsContainerPath(bindMount.DstPath)
+
+		if !filepath.IsAbs(bindMount.SrcPath) || !filepath.IsAbs(dstPath) {
 			return nil, fmt.Errorf("src and dst must be absolute")
 		}
 
@@ -93,7 +107,7 @@ func OciSpecBindMounts(bindMounts []garden.BindMount) (mounts []specs.Mount, err
 
 		mounts = append(mounts, specs.Mount{
 			Source:      bindMount.SrcPath,
-			Destination: bindMount.DstPath,
+			Destination: dstPath,
 			Options:     []string{mode},
 		})
 	}
