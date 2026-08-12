@@ -52,6 +52,23 @@ func TestOciSpec(t *testing.T) {
 	}
 }
 
+func TestOciSpecEscapedRootfs(t *testing.T) {
+	gdn := garden.ContainerSpec{
+		Handle:     "handle",
+		RootFSPath: `raw://C:%5Cworkdir%5Cvolumes%5Clive%5Cguid%5Cvolume/rootfs`,
+	}
+
+	oci, err := spec.OciSpec(spec.DefaultInitBinPath, specs.LinuxSeccomp{}, specs.LinuxSeccomp{}, specs.Hooks{}, spec.FullPrivilegedMode, gdn, 0, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `C:\workdir\volumes\live\guid\volume\rootfs`
+	if oci.Root.Path != expected {
+		t.Errorf("unexpected root path: %s", oci.Root.Path)
+	}
+}
+
 func TestOciSpecRequiresHandle(t *testing.T) {
 	_, err := spec.OciSpec(spec.DefaultInitBinPath, specs.LinuxSeccomp{}, specs.LinuxSeccomp{}, specs.Hooks{}, spec.FullPrivilegedMode, garden.ContainerSpec{}, 0, 0)
 	if err == nil {
