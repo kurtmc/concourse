@@ -52,9 +52,19 @@ func (b *GardenBackend) prepareRootfs(oci *specs.Spec) error {
 			return fmt.Errorf("remove utility vm image: %w", err)
 		}
 
-		err = hcsshim.ConvertToBaseLayer(layerDir)
-		if err != nil {
-			return fmt.Errorf("convert to base layer: %w", err)
+		// ConvertToBaseLayer creates minimal registry hives but fails on
+		// images that already ship them; process those directly.
+		systemHive := filepath.Join(layerDir, "Files", "Windows", "System32", "config", "SYSTEM")
+		if _, err := os.Stat(systemHive); err == nil {
+			err = hcsshim.ProcessBaseLayer(layerDir)
+			if err != nil {
+				return fmt.Errorf("process base layer: %w", err)
+			}
+		} else {
+			err = hcsshim.ConvertToBaseLayer(layerDir)
+			if err != nil {
+				return fmt.Errorf("convert to base layer: %w", err)
+			}
 		}
 	}
 
