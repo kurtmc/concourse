@@ -366,9 +366,9 @@ func (b *GardenBackend) createContainer(ctx context.Context, gdnSpec garden.Cont
 
 	oci.Mounts = append(oci.Mounts, netMounts...)
 
-	err = b.prepareRootfs(oci)
+	err = b.prepareContainer(oci, gdnSpec.Handle)
 	if err != nil {
-		return nil, fmt.Errorf("prepare rootfs: %w", err)
+		return nil, fmt.Errorf("prepare container: %w", err)
 	}
 
 	labels, err := propertiesToLabels(gdnSpec.Properties)

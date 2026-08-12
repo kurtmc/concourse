@@ -7,10 +7,29 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Microsoft/hcsshim"
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
+
+// prepareContainer converts the container's rootfs into Windows container
+// layers and attaches the container to the worker's network.
+func (b *GardenBackend) prepareContainer(oci *specs.Spec, handle string) error {
+	err := b.prepareRootfs(oci)
+	if err != nil {
+		return fmt.Errorf("prepare rootfs: %w", err)
+	}
+
+	if attacher, ok := b.network.(ContainerAttacher); ok {
+		err = attacher.AttachContainer(handle, oci)
+		if err != nil {
+			return fmt.Errorf("attach container network: %w", err)
+		}
+	}
+
+	return nil
+}
 
 // prepareRootfs converts the container's rootfs directory into a Windows
 // container base layer and creates the scratch layer that the runhcs shim
@@ -56,6 +75,11 @@ func (b *GardenBackend) prepareRootfs(oci *specs.Spec) error {
 			}
 		}
 
+		err = scrubLayerState(layerDir)
+		if err != nil {
+			return fmt.Errorf("scrub layer state: %w", err)
+		}
+
 		// ConvertToBaseLayer creates minimal registry hives but fails on
 		// images that already ship them; process those directly.
 		systemHive := filepath.Join(layerDir, "Files", "Windows", "System32", "config", "SYSTEM")
@@ -88,6 +112,61 @@ func (b *GardenBackend) prepareRootfs(oci *specs.Spec) error {
 
 	oci.Root = nil
 	oci.Windows.LayerFolders = []string{layerDir, scratchDir}
+
+	return nil
+}
+
+// scrubLayerState removes machine state that the containers used to build
+// the image's layers left behind: user profile hives, DPAPI master keys,
+// event logs and other runtime files. The registry deltas this state belongs
+// with don't survive image flattening, and booting with the mismatched state
+// makes the container exit during OS startup.
+func scrubLayerState(layerDir string) error {
+	stateArtifacts := []string{
+		filepath.Join("Users", "ContainerAdministrator"),
+		filepath.Join("Users", "ContainerUser"),
+		filepath.Join("Windows", "System32", "LogFiles"),
+		filepath.Join("Windows", "System32", "winevt", "Logs"),
+		filepath.Join("Windows", "System32", "Microsoft", "Protect", "S-1-5-18", "User"),
+		filepath.Join("Windows", "ServiceState"),
+	}
+
+	for _, artifact := range stateArtifacts {
+		err := os.RemoveAll(filepath.Join(layerDir, "Files", artifact))
+		if err != nil {
+			return fmt.Errorf("remove %s: %w", artifact, err)
+		}
+	}
+
+	// service account profile hives from the build containers
+	profilesDir := filepath.Join(layerDir, "Files", "Windows", "ServiceProfiles")
+	profiles, err := os.ReadDir(profilesDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return fmt.Errorf("read service profiles: %w", err)
+	}
+
+	for _, profile := range profiles {
+		if !profile.IsDir() {
+			continue
+		}
+
+		entries, err := os.ReadDir(filepath.Join(profilesDir, profile.Name()))
+		if err != nil {
+			return fmt.Errorf("read service profile %s: %w", profile.Name(), err)
+		}
+
+		for _, entry := range entries {
+			if strings.HasPrefix(strings.ToLower(entry.Name()), "ntuser") {
+				err = os.RemoveAll(filepath.Join(profilesDir, profile.Name(), entry.Name()))
+				if err != nil {
+					return fmt.Errorf("remove profile hive: %w", err)
+				}
+			}
+		}
+	}
 
 	return nil
 }

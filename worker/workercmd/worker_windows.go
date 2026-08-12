@@ -30,6 +30,12 @@ type ContainerdRuntime struct {
 	LogLevel       string        `long:"log-level" default:"info" choice:"trace" choice:"debug" choice:"info" choice:"warn" choice:"error" choice:"fatal" choice:"panic" description:"Minimum level of logs to see."`
 	RequestTimeout time.Duration `long:"request-timeout" default:"5m" description:"How long to wait for requests to Containerd to complete. 0 means no timeout."`
 	MaxContainers  int           `long:"max-containers" default:"250" description:"Max container capacity. 0 means no limit."`
+
+	Network struct {
+		Name    string `long:"network-name" default:"nat" description:"Name of the HNS network to attach containers to. Created as a NAT network if it doesn't exist."`
+		Pool    string `long:"network-pool" default:"10.80.0.0/24" description:"Subnet to use when the HNS network has to be created."`
+		Gateway string `long:"network-gateway" default:"10.80.0.1" description:"Gateway address to use when the HNS network has to be created."`
+	} `group:"Containerd Networking"`
 }
 
 type Certs struct{}

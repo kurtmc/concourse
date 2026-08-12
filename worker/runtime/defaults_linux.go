@@ -20,6 +20,6 @@ func defaultTaskOpts() []containerd.NewTaskOpts {
 	return []containerd.NewTaskOpts{containerd.WithNoNewKeyring}
 }
 
-func (b *GardenBackend) prepareRootfs(oci *specs.Spec) error {
+func (b *GardenBackend) prepareContainer(oci *specs.Spec, handle string) error {
 	return nil
 }

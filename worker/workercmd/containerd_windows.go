@@ -62,8 +62,13 @@ func (cmd *WorkerCommand) containerdGardenServerRunner(logger lager.Logger, cont
 		cmd.Containerd.InitBin = initBin
 	}
 
+	network := runtime.NewHCNNetwork(
+		runtime.WithHCNNetworkName(cmd.Containerd.Network.Name),
+		runtime.WithHCNNetworkPool(cmd.Containerd.Network.Pool, cmd.Containerd.Network.Gateway),
+	)
+
 	backendOpts := []runtime.GardenBackendOpt{
-		runtime.WithNetwork(runtime.NewNoopNetwork()),
+		runtime.WithNetwork(network),
 		runtime.WithRequestTimeout(cmd.Containerd.RequestTimeout),
 		runtime.WithMaxContainers(cmd.Containerd.MaxContainers),
 		runtime.WithInitBinPath(cmd.Containerd.InitBin),
