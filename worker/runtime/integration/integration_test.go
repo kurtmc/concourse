@@ -202,7 +202,7 @@ func (s *IntegrationSuite) TestContainerCreateRunStopedDestroy() {
 
 	containers, err = s.gardenBackend.Containers(properties)
 	s.NoError(err)
-	s.Len(containers, 0)
+	s.Empty(containers)
 }
 
 // TestContainerNetworkEgress aims at verifying that a process that we run in a
@@ -281,7 +281,7 @@ func (s *IntegrationSuite) TestHermeticContainerNetworkEgress() {
 	exitCode, err := proc.Wait()
 	s.NoError(err)
 
-	s.Equal(exitCode, 1, "Process in container should not be able to connect to external network")
+	s.Equal(1, exitCode, "Process in container should not be able to connect to external network")
 	s.Contains(buf.String(), "failed performing http getGet \"http://example.com\": dial tcp: lookup example.com")
 }
 
@@ -349,7 +349,7 @@ func (s *IntegrationSuite) TestContainerNetworkEgressWithRestrictedNetworks() {
 	exitCode, err := proc.Wait()
 	s.NoError(err)
 
-	s.Equal(exitCode, 1, "Process in container should not be able to connect to restricted network")
+	s.Equal(1, exitCode, "Process in container should not be able to connect to restricted network")
 	s.Contains(buf.String(), "connect: connection refused")
 }
 
@@ -398,7 +398,7 @@ func (s *IntegrationSuite) TestContainerBlocksHostAccess() {
 
 	exitCode, err := proc.Wait()
 	s.NoError(err)
-	s.Equal(exitCode, 1, "Process in container should not be able to connect to host network")
+	s.Equal(1, exitCode, "Process in container should not be able to connect to host network")
 
 	proc, err = container.Run(
 		garden.ProcessSpec{
@@ -527,7 +527,7 @@ func (s *IntegrationSuite) TestContainerNetworkHosts() {
 	exitCode, err := proc.Wait()
 	s.NoError(err)
 
-	s.Equal(exitCode, 0)
+	s.Equal(0, exitCode)
 	s.Contains(buf.String(), handle)
 }
 
@@ -587,7 +587,7 @@ func (s *IntegrationSuite) runToCompletion(privileged bool) {
 	exitCode, err := proc.Wait()
 	s.NoError(err)
 
-	s.Equal(exitCode, 0)
+	s.Equal(0, exitCode)
 	s.Equal("hello world\n", buf.String())
 
 }
@@ -650,7 +650,7 @@ func (s *IntegrationSuite) TestRunRecoversFromTaskNotFoundErr() {
 	exitCode, err := proc.Wait()
 	s.NoError(err)
 
-	s.Equal(exitCode, 0)
+	s.Equal(0, exitCode)
 	s.Equal("hello world\n", buf.String())
 }
 
@@ -689,7 +689,7 @@ func (s *IntegrationSuite) TestRunWithoutTerminalStdinReturnsEOF() {
 	exitCode, err := proc.Wait()
 	s.NoError(err)
 
-	s.Equal(exitCode, 0)
+	s.Equal(0, exitCode)
 	s.Contains(buf.String(), "hello world")
 
 	err = s.gardenBackend.Destroy(container.Handle())
@@ -734,7 +734,7 @@ func (s *IntegrationSuite) TestRunWithTerminalStdinClosed() {
 	exitCode, err := proc.Wait()
 	s.NoError(err)
 
-	s.Equal(exitCode, 0)
+	s.Equal(0, exitCode)
 	s.Contains(buf.String(), "slept for 5s")
 
 	err = s.gardenBackend.Destroy(container.Handle())
@@ -865,7 +865,7 @@ func (s *IntegrationSuite) TestAttach() {
 	exitCode, err := proc.Wait()
 	s.NoError(err)
 
-	s.Equal(exitCode, 0)
+	s.Equal(0, exitCode)
 	s.Contains(buf.String(), "aa\naa\naa\naa\naa\naa\n")
 
 	err = s.gardenBackend.Destroy(container.Handle())
@@ -938,7 +938,7 @@ func (s *IntegrationSuite) TestCustomDNS() {
 	exitCode, err := proc.Wait()
 	s.NoError(err)
 
-	s.Equal(exitCode, 0)
+	s.Equal(0, exitCode)
 	expectedDNSServer := "nameserver 1.1.1.1\nnameserver 1.2.3.4\n"
 	s.Equal(expectedDNSServer, buf.String())
 }
@@ -1213,7 +1213,7 @@ func (s *IntegrationSuite) TestNetworkMountsAreRemoved() {
 	exitCode, err := proc.Wait()
 	s.NoError(err)
 
-	s.Equal(exitCode, 0)
+	s.Equal(0, exitCode)
 
 	networkFiles, err := os.ReadDir(filepath.Join(networkMountsDir, "networkmounts", handle))
 	s.NoError(err)
@@ -1223,7 +1223,7 @@ func (s *IntegrationSuite) TestNetworkMountsAreRemoved() {
 
 	networkFiles, err = os.ReadDir(filepath.Join(networkMountsDir, "networkmounts"))
 	s.NoError(err)
-	s.Len(networkFiles, 0)
+	s.Empty(networkFiles)
 }
 
 // TestNewContainerEnforcesTimeoutOnTask is a regression test verifying that

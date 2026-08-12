@@ -56,12 +56,12 @@ func (s *ProcessKillerSuite) TestKillWaitError() {
 	s.proc.WaitReturns(nil, expectedErr)
 
 	err := s.killer.Kill(context.Background(), s.proc, s.signal, s.goodEnoughTimeout)
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ProcessKillerSuite) TestKillWaitContextDeadlineReached() {
 	err := s.killer.Kill(context.Background(), s.proc, s.signal, s.notEnoughTimeout)
-	s.True(errors.Is(err, runtime.ErrGracePeriodTimeout))
+	s.ErrorIs(err, runtime.ErrGracePeriodTimeout)
 }
 
 func (s *ProcessKillerSuite) TestKillWaitContextCancelled() {
@@ -69,7 +69,7 @@ func (s *ProcessKillerSuite) TestKillWaitContextCancelled() {
 	cancel()
 
 	err := s.killer.Kill(ctx, s.proc, s.signal, s.goodEnoughTimeout)
-	s.True(errors.Is(err, context.Canceled))
+	s.ErrorIs(err, context.Canceled)
 }
 
 func (s *ProcessKillerSuite) TestKillExitStatusError() {
@@ -80,5 +80,5 @@ func (s *ProcessKillerSuite) TestKillExitStatusError() {
 	s.proc.WaitReturns(ch, nil)
 
 	err := s.killer.Kill(context.Background(), s.proc, s.signal, s.goodEnoughTimeout)
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }

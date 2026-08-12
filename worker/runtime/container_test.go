@@ -74,7 +74,7 @@ func (s *ContainerSuite) TestStopErrorsTaskLookup() {
 	s.containerdContainer.TaskReturns(nil, expectedErr)
 
 	err := s.container.Stop(false)
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ContainerSuite) TestStopErrorsKill() {
@@ -84,7 +84,7 @@ func (s *ContainerSuite) TestStopErrorsKill() {
 	s.containerdTask.IDReturns("some-id")
 
 	err := s.container.Stop(false)
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ContainerSuite) TestRunContainerSpecErr() {
@@ -92,7 +92,7 @@ func (s *ContainerSuite) TestRunContainerSpecErr() {
 	s.containerdContainer.SpecReturns(nil, expectedErr)
 
 	_, err := s.container.Run(garden.ProcessSpec{}, garden.ProcessIO{})
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ContainerSuite) TestRunWithNonRootCwdSetupCwdFails() {
@@ -105,7 +105,7 @@ func (s *ContainerSuite) TestRunWithNonRootCwdSetupCwdFails() {
 	s.rootfsManager.SetupCwdReturns(expectedErr)
 
 	_, err := s.container.Run(garden.ProcessSpec{Dir: "/somewhere"}, garden.ProcessIO{})
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ContainerSuite) TestRunTaskError() {
@@ -118,7 +118,7 @@ func (s *ContainerSuite) TestRunTaskError() {
 	s.containerdContainer.TaskReturns(nil, expectedErr)
 
 	_, err := s.container.Run(garden.ProcessSpec{}, garden.ProcessIO{})
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ContainerSuite) TestRunTaskNotFoundErrorSucceeds() {
@@ -148,7 +148,7 @@ func (s *ContainerSuite) TestRunTaskExecError() {
 	s.containerdTask.ExecReturns(nil, expectedErr)
 
 	_, err := s.container.Run(garden.ProcessSpec{}, garden.ProcessIO{})
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ContainerSuite) TestRunProcWaitError() {
@@ -164,7 +164,7 @@ func (s *ContainerSuite) TestRunProcWaitError() {
 	s.containerdProcess.WaitReturns(nil, expectedErr)
 
 	_, err := s.container.Run(garden.ProcessSpec{}, garden.ProcessIO{})
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ContainerSuite) TestRunProcStartError() {
@@ -180,7 +180,7 @@ func (s *ContainerSuite) TestRunProcStartError() {
 	s.containerdProcess.StartReturns(expectedErr)
 
 	_, err := s.container.Run(garden.ProcessSpec{}, garden.ProcessIO{})
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ContainerSuite) TestRunProcStartErrorExecutableNotFound() {
@@ -196,7 +196,7 @@ func (s *ContainerSuite) TestRunProcStartErrorExecutableNotFound() {
 	s.containerdProcess.StartReturns(exeNotFoundErr)
 
 	_, err := s.container.Run(garden.ProcessSpec{}, garden.ProcessIO{})
-	s.True(errors.Is(err, garden.ExecutableNotFoundError{Message: exeNotFoundErr.Error()}))
+	s.ErrorIs(err, garden.ExecutableNotFoundError{Message: exeNotFoundErr.Error()})
 }
 
 func (s *ContainerSuite) TestRunWithUserLookupSucceeds() {
@@ -322,7 +322,7 @@ func (s *ContainerSuite) TestRunWithUserLookupErrors() {
 	s.rootfsManager.LookupUserReturns(specs.User{}, false, expectedErr)
 
 	_, err := s.container.Run(garden.ProcessSpec{User: "some_user"}, garden.ProcessIO{})
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ContainerSuite) TestRunWithUserLookupNotFound() {
@@ -337,7 +337,7 @@ func (s *ContainerSuite) TestRunWithUserLookupNotFound() {
 	s.rootfsManager.LookupUserReturns(specs.User{}, false, nil)
 
 	_, err := s.container.Run(garden.ProcessSpec{User: "some_invalid_user"}, garden.ProcessIO{})
-	s.True(errors.Is(err, runtime.UserNotFoundError{User: "some_invalid_user"}))
+	s.ErrorIs(err, runtime.UserNotFoundError{User: "some_invalid_user"})
 }
 
 func (s *ContainerSuite) TestRunCallsIOManager() {
@@ -438,7 +438,7 @@ func (s *ContainerSuite) TestSetGraceTimeSetLabelsFails() {
 	s.containerdContainer.SetLabelsReturns(nil, expectedErr)
 
 	err := s.container.SetGraceTime(1234)
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ContainerSuite) TestSetGraceTimeSetLabelsSucceeds() {
@@ -456,7 +456,7 @@ func (s *ContainerSuite) TestPropertyGetLabelsFails() {
 	expectedErr := errors.New("get-labels-error")
 	s.containerdContainer.LabelsReturns(nil, expectedErr)
 	_, err := s.container.Property("any")
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ContainerSuite) TestPropertyNotFound() {
@@ -492,7 +492,7 @@ func (s *ContainerSuite) TestCurrentCPULimitsGetInfoFails() {
 	expectedErr := errors.New("get-spec-error")
 	s.containerdContainer.SpecReturns(nil, expectedErr)
 	_, err := s.container.CurrentCPULimits()
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ContainerSuite) TestCurrentCPULimitsNoLimitSet() {
@@ -528,7 +528,7 @@ func (s *ContainerSuite) TestCurrentMemoryLimitsGetSpecFails() {
 	expectedErr := errors.New("get-spec-error")
 	s.containerdContainer.SpecReturns(nil, expectedErr)
 	_, err := s.container.CurrentMemoryLimits()
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ContainerSuite) TestCurrentMemoryLimitsNoLimitSet() {

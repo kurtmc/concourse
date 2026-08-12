@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || windows
 
 package runtime
 
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -21,9 +20,6 @@ import (
 )
 
 const (
-	SuperuserPath = "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-	Path          = "PATH=/usr/local/bin:/usr/bin:/bin"
-
 	GraceTimeKey         = "garden.grace-time"
 	ProcessExitStatusKey = "garden.process-exit-status"
 )
@@ -31,7 +27,6 @@ const (
 var (
 	noSuchFile         = regexp.MustCompile(`starting container process caused: exec: .*: stat .*: no such file or directory`)
 	executableNotFound = regexp.MustCompile(`starting container process caused: exec: .*: executable file not found in \$PATH`)
-	pathRegexp         = regexp.MustCompile("^PATH=.*$")
 )
 
 type UserNotFoundError struct {
@@ -120,7 +115,7 @@ func (c *Container) Run(
 			// The task may have been killed if the containerd daemon was
 			// restarted. We can recover from this error by recreating the task
 			// and continuing as usual
-			initTask, err := c.container.NewTask(ctx, cio.NullIO, containerd.WithNoNewKeyring)
+			initTask, err := c.container.NewTask(ctx, cio.NullIO, defaultTaskOpts()...)
 			if err != nil {
 				return nil, fmt.Errorf("recreating init task: %w", err)
 			}
@@ -413,7 +408,7 @@ func (c *Container) setupContainerdProcSpec(gdnProcSpec garden.ProcessSpec, cont
 
 	cwd := gdnProcSpec.Dir
 	if cwd == "" {
-		cwd = "/"
+		cwd = defaultProcessCwd
 	}
 
 	procSpec.Cwd = cwd
@@ -449,20 +444,6 @@ func (c *Container) setupContainerdProcSpec(gdnProcSpec garden.ProcessSpec, cont
 	}
 
 	return *procSpec, nil
-}
-
-// Set a default path based on the UID if no existing PATH is found
-func envWithDefaultPath(uid uint32, currentEnv []string) string {
-	pathFound := slices.ContainsFunc(currentEnv, pathRegexp.MatchString)
-	if pathFound {
-		return ""
-	}
-
-	if uid == 0 {
-		return SuperuserPath
-	}
-
-	return Path
 }
 
 func containerdCIO(gdnProcIO garden.ProcessIO, tty bool) []cio.Opt {

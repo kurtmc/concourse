@@ -38,7 +38,7 @@ func waitForSignal(sig string) {
 		)
 	}
 
-	ch := make(chan os.Signal)
+	ch := make(chan os.Signal, 1)
 	signal.Ignore()
 	signal.Notify(ch, s)
 	<-ch

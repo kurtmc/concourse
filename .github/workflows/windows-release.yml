@@ -1,0 +1,54 @@
+name: Windows Release
+
+on:
+  push:
+    branches:
+      - feature/containerd-windows
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: containerd-windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build Windows binaries
+        env:
+          GOOS: windows
+          GOARCH: amd64
+          CGO_ENABLED: "0"
+        run: |
+          version="0.0.0-containerd-windows.${{ github.run_number }}"
+          mkdir -p dist/concourse/bin
+          go build -ldflags "-X github.com/concourse/concourse.Version=${version}" -o dist/concourse/bin/concourse.exe ./cmd/concourse
+          go build -ldflags "-X github.com/concourse/concourse.Version=${version}" -o dist/concourse/bin/fly.exe ./fly
+          go build -o dist/concourse/bin/init.exe ./cmd/init/windows
+
+      - name: Package artifact
+        run: |
+          cd dist
+          zip -r ../concourse-windows-amd64.zip concourse
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --prerelease \
+              --title "Windows containerd worker (experimental)" \
+              --notes "Experimental Windows worker binaries with containerd runtime support, built from the feature/containerd-windows branch."
+          fi
+          gh release upload "$RELEASE_TAG" concourse-windows-amd64.zip --repo "$GITHUB_REPOSITORY" --clobber
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --notes "Experimental Windows worker binaries with containerd runtime support, built from the feature/containerd-windows branch at ${GITHUB_SHA}."

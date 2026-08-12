@@ -467,9 +467,10 @@ func (s *SpecSuite) TestContainerSpec() {
 					Options:     []string{"nosuid", "noexec", "nodev"},
 				})
 				for _, ociMount := range oci.Mounts {
-					if ociMount.Destination == "/sys" {
+					switch ociMount.Destination {
+					case "/sys":
 						s.NotContains(ociMount.Options, "ro", "%s: %s", ociMount.Destination, ociMount.Type)
-					} else if ociMount.Destination == "/sys/fs/cgroup" {
+					case "/sys/fs/cgroup":
 						s.NotContains(ociMount.Options, "ro", "%s: %s", ociMount.Destination, ociMount.Type)
 					}
 				}
@@ -498,9 +499,10 @@ func (s *SpecSuite) TestContainerSpec() {
 					Options:     []string{"nosuid", "noexec", "nodev"},
 				})
 				for _, ociMount := range oci.Mounts {
-					if ociMount.Destination == "/sys" {
+					switch ociMount.Destination {
+					case "/sys":
 						s.Contains(ociMount.Options, "ro", "%s: %s", ociMount.Destination, ociMount.Type)
-					} else if ociMount.Destination == "/sys/fs/cgroup" {
+					case "/sys/fs/cgroup":
 						s.Contains(ociMount.Options, "ro", "%s: %s", ociMount.Destination, ociMount.Type)
 					}
 				}

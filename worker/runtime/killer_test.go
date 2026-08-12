@@ -56,12 +56,12 @@ func (s *KillerSuite) TestKillTaskPidsErr() {
 
 	s.T().Run("graceful", func(_ *testing.T) {
 		err := s.killer.Kill(context.Background(), s.task, runtime.KillGracefully)
-		s.True(errors.Is(err, expectedErr))
+		s.ErrorIs(err, expectedErr)
 	})
 
 	s.T().Run("ungraceful", func(_ *testing.T) {
 		err := s.killer.Kill(context.Background(), s.task, runtime.KillUngracefully)
-		s.True(errors.Is(err, expectedErr))
+		s.ErrorIs(err, expectedErr)
 	})
 }
 
@@ -100,12 +100,12 @@ func (s *KillerSuite) TestKillTaskLoadProcessError() {
 
 	s.T().Run("graceful", func(_ *testing.T) {
 		err = s.killer.Kill(context.Background(), s.task, runtime.KillUngracefully)
-		s.True(errors.Is(err, expectedErr))
+		s.ErrorIs(err, expectedErr)
 	})
 
 	s.T().Run("ungraceful", func(_ *testing.T) {
 		err = s.killer.Kill(context.Background(), s.task, runtime.KillUngracefully)
-		s.True(errors.Is(err, expectedErr))
+		s.ErrorIs(err, expectedErr)
 	})
 }
 
@@ -123,7 +123,7 @@ func (s *KillerSuite) TestUngracefulKillTaskProcKillError() {
 	s.processKiller.KillReturns(expectedErr)
 
 	err = s.killer.Kill(context.Background(), s.task, runtime.KillUngracefully)
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *KillerSuite) TestGracefulKillTaskProcKillGracePeriodTimeoutError() {
@@ -159,7 +159,7 @@ func (s *KillerSuite) TestGracefulKillTaskProcKillUncaughtError() {
 	s.processKiller.KillReturnsOnCall(0, expectedErr)
 
 	err = s.killer.Kill(context.Background(), s.task, runtime.KillGracefully)
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 
 	s.Equal(1, s.processKiller.KillCallCount())
 }
@@ -179,7 +179,7 @@ func (s *KillerSuite) TestGracefulKillTaskProcKillErrorOnUngracefulTry() {
 	s.processKiller.KillReturnsOnCall(1, expectedErr)
 
 	err = s.killer.Kill(context.Background(), s.task, runtime.KillGracefully)
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 
 	s.Equal(2, s.processKiller.KillCallCount())
 }

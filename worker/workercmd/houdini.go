@@ -15,7 +15,7 @@ func (cmd *WorkerCommand) houdiniRunner(logger lager.Logger) (ifrit.Runner, erro
 
 	err := os.MkdirAll(depotDir, 0755)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create depot dir: %s", err)
+		return nil, fmt.Errorf("failed to create depot dir: %w", err)
 	}
 
 	backend := houdini.NewBackend(depotDir)

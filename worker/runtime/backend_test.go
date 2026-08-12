@@ -126,7 +126,7 @@ func (s *BackendSuite) TestCreateWithContainerNetOutNotSet() {
 	s.Equal(1, s.network.DropContainerTrafficCallCount())
 
 	containerId := s.network.DropContainerTrafficArgsForCall(0)
-	s.Equal(containerId, "some-container-ID")
+	s.Equal("some-container-ID", containerId)
 }
 
 func (s *BackendSuite) TestCreateWithContainerNetOutSet() {
@@ -252,7 +252,7 @@ func (s *BackendSuite) TestCreateMaxContainersReachedConcurrent() {
 	close(requestErrors)
 
 	s.Len(requestErrors, numberOfRequests-1)
-	s.Equal(s.client.NewContainerCallCount(), 1)
+	s.Equal(1, s.client.NewContainerCallCount())
 	for err := range requestErrors {
 		s.Contains(err.Error(), "max containers reached")
 	}
@@ -435,7 +435,7 @@ func (s *BackendSuite) TestDestroyGetTaskError() {
 	fakeContainer.TaskReturns(nil, expectedError)
 
 	err := s.backend.Destroy("some handle")
-	s.True(errors.Is(err, expectedError))
+	s.ErrorIs(err, expectedError)
 }
 
 func (s *BackendSuite) TestDestroyGetTaskErrorNotFoundAndDeleteFails() {
@@ -448,7 +448,7 @@ func (s *BackendSuite) TestDestroyGetTaskErrorNotFoundAndDeleteFails() {
 	fakeContainer.DeleteReturns(expectedError)
 
 	err := s.backend.Destroy("some handle")
-	s.True(errors.Is(err, expectedError))
+	s.ErrorIs(err, expectedError)
 }
 
 func (s *BackendSuite) TestDestroyGetTaskErrorNotFoundAndDeleteSucceeds() {
@@ -474,7 +474,7 @@ func (s *BackendSuite) TestDestroyKillTaskFails() {
 	s.killer.KillReturns(expectedError)
 
 	err := s.backend.Destroy("some handle")
-	s.True(errors.Is(err, expectedError))
+	s.ErrorIs(err, expectedError)
 	_, _, behaviour := s.killer.KillArgsForCall(0)
 	s.Equal(runtime.KillGracefully, behaviour)
 }
@@ -490,7 +490,7 @@ func (s *BackendSuite) TestDestroyRemoveNetworkFails() {
 	s.network.RemoveReturns(expectedError)
 
 	err := s.backend.Destroy("some handle")
-	s.True(errors.Is(err, expectedError))
+	s.ErrorIs(err, expectedError)
 }
 
 func (s *BackendSuite) TestDestroyDeleteTaskFails() {
@@ -504,7 +504,7 @@ func (s *BackendSuite) TestDestroyDeleteTaskFails() {
 	fakeTask.DeleteReturns(nil, expectedError)
 
 	err := s.backend.Destroy("some handle")
-	s.True(errors.Is(err, expectedError))
+	s.ErrorIs(err, expectedError)
 }
 
 func (s *BackendSuite) TestDestroyContainerDeleteFailsAndDeleteTaskSucceeds() {
@@ -518,7 +518,7 @@ func (s *BackendSuite) TestDestroyContainerDeleteFailsAndDeleteTaskSucceeds() {
 	fakeContainer.DeleteReturns(expectedError)
 
 	err := s.backend.Destroy("some handle")
-	s.True(errors.Is(err, expectedError))
+	s.ErrorIs(err, expectedError)
 }
 
 func (s *BackendSuite) TestDestroySucceeds() {
@@ -560,7 +560,7 @@ func (s *BackendSuite) TestDestroyCallResumeContainerTraffic() {
 	s.Equal(1, s.network.ResumeContainerTrafficCallCount())
 
 	containerId := s.network.ResumeContainerTrafficArgsForCall(0)
-	s.Equal(containerId, "some handle")
+	s.Equal("some handle", containerId)
 }
 
 func (s *BackendSuite) TestStartInitsClientAndSetsUpRestrictedNetworks() {
@@ -671,7 +671,7 @@ func (s *BackendSuite) TestHookFileParse() {
 	for sample_json, expected_outcome := range samples {
 		var dest runtime.HookFile
 		var err = json.Unmarshal([]byte(sample_json), &dest)
-		s.Equal(err, nil)
+		s.NoError(err)
 		s.Equal(dest, expected_outcome)
 	}
 }

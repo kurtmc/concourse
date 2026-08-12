@@ -1,9 +1,10 @@
-//go:build linux
+//go:build linux || windows
 
 package runtime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"syscall"
@@ -70,7 +71,7 @@ func (p processKiller) Kill(
 	select {
 	case <-waitCtx.Done():
 		err = waitCtx.Err()
-		if err == context.DeadlineExceeded {
+		if errors.Is(err, context.DeadlineExceeded) {
 			return ErrGracePeriodTimeout
 		}
 

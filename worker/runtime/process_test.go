@@ -59,7 +59,7 @@ func (s *ProcessSuite) TestWaitStatusErr() {
 	s.ch <- *containerd.NewExitStatus(0, time.Now(), expectedErr)
 
 	_, err := s.process.Wait()
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 	s.Equal(0, s.containerdContainer.SetLabelsCallCount())
 }
 
@@ -71,7 +71,7 @@ func (s *ProcessSuite) TestProcessWaitDeleteError() {
 	s.containerdProcess.DeleteReturns(nil, expectedErr)
 
 	_, err := s.process.Wait()
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ProcessSuite) TestProcessWaitProcessAlreadyDeleted() {
@@ -121,7 +121,7 @@ func (s *ProcessSuite) TestSetTTYResizeError() {
 			Rows:    456,
 		},
 	})
-	s.True(errors.Is(err, expectedErr))
+	s.ErrorIs(err, expectedErr)
 }
 
 func (s *ProcessSuite) TestSetTTYResize() {

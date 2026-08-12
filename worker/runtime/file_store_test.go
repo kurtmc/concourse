@@ -90,5 +90,5 @@ func (s *FileStoreSuite) TestContainerIpLookup() {
 	ip, err := s.store.ContainerIpLookup("some-handle")
 	s.NoError(err)
 
-	s.Equal(ip, "10.80.0.42")
+	s.Equal("10.80.0.42", ip)
 }

@@ -68,7 +68,7 @@ func (cmd *WorkerCommand) guardianRunner(logger lager.Logger) (ifrit.Runner, err
 	}
 
 	gdnServerFlags := []string{
-		"--bind-ip", cmd.BindIP.IP.String(),
+		"--bind-ip", cmd.BindIP.String(),
 		"--bind-port", fmt.Sprintf("%d", cmd.BindPort),
 
 		"--depot", depotDir,
@@ -193,7 +193,7 @@ func getGdnFlagsFromEnv(logger lager.Logger) []string {
 }
 
 func flagify(env string) string {
-	return strings.Replace(strings.ToLower(env), "_", "-", -1)
+	return strings.ReplaceAll(strings.ToLower(env), "_", "-")
 }
 
 func getGdnFlagsFromConfig(configPath string) (GdnBinaryFlags, error) {

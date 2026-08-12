@@ -118,7 +118,7 @@ func (s *CNINetworkSuite) TestSetupMountsReturnsMountpoints() {
 	s.NoError(err)
 
 	s.Len(mounts, 3)
-	s.Equal(mounts, []specs.Mount{
+	s.Equal([]specs.Mount{
 		{
 			Destination: "/etc/hosts",
 			Type:        "bind",
@@ -137,7 +137,7 @@ func (s *CNINetworkSuite) TestSetupMountsReturnsMountpoints() {
 			Source:      "/worker-state/handle/etc/resolv.conf",
 			Options:     []string{"bind", "rw"},
 		},
-	})
+	}, mounts)
 }
 
 func (s *CNINetworkSuite) TestSetupMountsCallsStoreWithNameServers() {
@@ -368,7 +368,7 @@ func (s *CNINetworkSuite) TestSetupHostNetwork() {
 
 		}
 
-		s.Equal(foundExpected, true, description)
+		s.True(foundExpected, description)
 	}
 }
 
@@ -424,9 +424,9 @@ func (s *CNINetworkSuite) TestAdd() {
 	s.Equal("id", id)
 	s.Equal("/proc/123/ns/net", netns)
 
-	s.Equal(s.store.AppendCallCount(), 1)
+	s.Equal(1, s.store.AppendCallCount())
 	path, content := s.store.AppendArgsForCall(0)
-	s.Equal(path, "container-handle/hosts")
+	s.Equal("container-handle/hosts", path)
 	s.Equal(content, []byte("10.8.0.1 container-handle\n"))
 }
 
@@ -474,7 +474,7 @@ func (s *CNINetworkSuite) TestDropContainerTraffic() {
 	err = network.DropContainerTraffic("some-handle")
 	s.NoError(err)
 
-	s.Equal(s.iptables.InsertRuleCallCount(), 2)
+	s.Equal(2, s.iptables.InsertRuleCallCount())
 	table, chain, pos, rulespec := s.iptables.InsertRuleArgsForCall(0)
 	s.Equal("filter", table)
 	s.Equal("INPUT", chain)
@@ -515,7 +515,7 @@ func (s *CNINetworkSuite) TestResumeContainerTraffic() {
 	err = network.ResumeContainerTraffic("some-handle")
 	s.NoError(err)
 
-	s.Equal(s.iptables.DeleteRuleCallCount(), 2)
+	s.Equal(2, s.iptables.DeleteRuleCallCount())
 	table, chain, rulespec := s.iptables.DeleteRuleArgsForCall(0)
 	s.Equal("filter", table)
 	s.Equal("INPUT", chain)

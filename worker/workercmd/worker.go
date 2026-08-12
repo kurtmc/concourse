@@ -225,7 +225,7 @@ func (cmd *WorkerCommand) gardenServerIsExternal() bool {
 
 func (cmd *WorkerCommand) gardenAddr() string {
 	if cmd.gardenServerIsExternal() {
-		return cmd.ExternalGardenURL.URL.Host
+		return cmd.ExternalGardenURL.Host
 	}
 
 	return fmt.Sprintf("%s:%d", cmd.BindIP, cmd.BindPort)
