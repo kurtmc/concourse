@@ -45,11 +45,15 @@ func (b *GardenBackend) prepareRootfs(oci *specs.Spec) error {
 	}
 
 	if _, err := os.Stat(filepath.Join(layerDir, "blank.vhdx")); os.IsNotExist(err) {
-		// only process isolation is supported; the utility VM image is
-		// unused and would fail conversion when incomplete
-		err = os.RemoveAll(filepath.Join(layerDir, "UtilityVM"))
-		if err != nil {
-			return fmt.Errorf("remove utility vm image: %w", err)
+		// Flattened multi-layer images carry per-layer artifacts that the
+		// base layer processing wants to create itself (Hives) or that only
+		// hyper-v isolation would use (UtilityVM); processing fails if
+		// they're present.
+		for _, artifact := range []string{"UtilityVM", "Hives"} {
+			err = os.RemoveAll(filepath.Join(layerDir, artifact))
+			if err != nil {
+				return fmt.Errorf("remove layer artifact %s: %w", artifact, err)
+			}
 		}
 
 		// ConvertToBaseLayer creates minimal registry hives but fails on
