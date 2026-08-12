@@ -32,6 +32,28 @@ jobs:
           go build -ldflags "-X github.com/concourse/concourse.Version=${version}" -o dist/concourse/bin/fly.exe ./fly
           go build -o dist/concourse/bin/init.exe ./cmd/init/windows
 
+      - name: Build registry-image resource type
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rir_version=$(gh api repos/concourse/registry-image-resource/releases/latest --jq .tag_name)
+          git clone --depth 1 --branch "$rir_version" https://github.com/concourse/registry-image-resource /tmp/rir
+
+          mkdir -p /tmp/rir-overlay/Files/opt/resource
+          cd /tmp/rir
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o /tmp/rir-overlay/Files/opt/resource/check.exe ./cmd/check
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o /tmp/rir-overlay/Files/opt/resource/in.exe ./cmd/in
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o /tmp/rir-overlay/Files/opt/resource/out.exe ./cmd/out
+          cd "$GITHUB_WORKSPACE"
+
+          go run github.com/google/go-containerregistry/cmd/crane@latest export --platform windows/amd64 mcr.microsoft.com/windows/nanoserver:ltsc2022 /tmp/rir-rootfs.tar
+          tar -rf /tmp/rir-rootfs.tar -C /tmp/rir-overlay Files
+
+          outdir=dist/concourse/resource-types/registry-image
+          mkdir -p "$outdir"
+          gzip -1 -c /tmp/rir-rootfs.tar > "$outdir/rootfs.tgz"
+          printf '{"type":"registry-image","version":"%s","privileged":false,"unique_version_history":false}\n' "${rir_version#v}" > "$outdir/resource_metadata.json"
+
       - name: Package artifact
         run: |
           cd dist
