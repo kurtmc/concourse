@@ -40,7 +40,7 @@ func (runner CmdRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) err
 			// on platforms that can't deliver the signal (e.g. Windows),
 			// fall back to killing the process so shutdown doesn't hang
 			if err := runner.Cmd.Process.Signal(sig); err != nil {
-				runner.Cmd.Process.Kill()
+				_ = runner.Cmd.Process.Kill()
 			}
 		case err := <-waitErr:
 			return err
