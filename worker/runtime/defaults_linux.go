@@ -19,3 +19,7 @@ func defaultSeccompProfiles() (profile, profileFuse specs.LinuxSeccomp) {
 func defaultTaskOpts() []containerd.NewTaskOpts {
 	return []containerd.NewTaskOpts{containerd.WithNoNewKeyring}
 }
+
+func (b *GardenBackend) prepareRootfs(oci *specs.Spec) error {
+	return nil
+}
