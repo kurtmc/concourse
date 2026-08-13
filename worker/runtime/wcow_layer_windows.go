@@ -64,6 +64,11 @@ func (b *GardenBackend) prepareRootfs(oci *specs.Spec) error {
 	}
 
 	if _, err := os.Stat(filepath.Join(layerDir, "blank.vhdx")); os.IsNotExist(err) {
+		err = mergeDeltaHives(layerDir)
+		if err != nil {
+			return fmt.Errorf("merge delta hives: %w", err)
+		}
+
 		// Flattened multi-layer images carry per-layer artifacts that the
 		// base layer processing wants to create itself (Hives) or that only
 		// hyper-v isolation would use (UtilityVM); processing fails if
@@ -112,6 +117,40 @@ func (b *GardenBackend) prepareRootfs(oci *specs.Spec) error {
 
 	oci.Root = nil
 	oci.Windows.LayerFolders = []string{layerDir, scratchDir}
+
+	return nil
+}
+
+// mergeDeltaHives merges the registry differencing hives of the image's last
+// layer onto the base registry. Only the last layer's deltas survive image
+// flattening, but for the common servercore case - a base layer plus one
+// cumulative update layer - that is exactly the delta that has to be applied
+// so the updated system files agree with the registry (e.g. driver config).
+func mergeDeltaHives(layerDir string) error {
+	deltas := map[string]string{
+		"System_Delta":      filepath.Join("Windows", "System32", "config", "SYSTEM"),
+		"Software_Delta":    filepath.Join("Windows", "System32", "config", "SOFTWARE"),
+		"Sam_Delta":         filepath.Join("Windows", "System32", "config", "SAM"),
+		"Security_Delta":    filepath.Join("Windows", "System32", "config", "SECURITY"),
+		"DefaultUser_Delta": filepath.Join("Users", "Default", "NTUSER.DAT"),
+	}
+
+	for delta, baseRel := range deltas {
+		deltaPath := filepath.Join(layerDir, "Hives", delta)
+		if _, err := os.Stat(deltaPath); os.IsNotExist(err) {
+			continue
+		}
+
+		basePath := filepath.Join(layerDir, "Files", baseRel)
+		if _, err := os.Stat(basePath); os.IsNotExist(err) {
+			continue
+		}
+
+		err := mergeHive(basePath, deltaPath)
+		if err != nil {
+			return fmt.Errorf("merge %s: %w", delta, err)
+		}
+	}
 
 	return nil
 }
