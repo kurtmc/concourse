@@ -1,0 +1,76 @@
+name: Windows Release
+
+on:
+  push:
+    branches:
+      - feature/containerd-windows
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: containerd-windows
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Build Windows binaries
+        env:
+          GOOS: windows
+          GOARCH: amd64
+          CGO_ENABLED: "0"
+        run: |
+          version="0.0.0-containerd-windows.${{ github.run_number }}"
+          mkdir -p dist/concourse/bin
+          go build -ldflags "-X github.com/concourse/concourse/v8.Version=${version}" -o dist/concourse/bin/concourse.exe ./cmd/concourse
+          go build -ldflags "-X github.com/concourse/concourse/v8.Version=${version}" -o dist/concourse/bin/fly.exe ./fly
+          go build -o dist/concourse/bin/init.exe ./cmd/init/windows
+
+      - name: Build registry-image resource type
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rir_version=$(gh api repos/concourse/registry-image-resource/releases/latest --jq .tag_name)
+          git clone --depth 1 --branch "$rir_version" https://github.com/concourse/registry-image-resource /tmp/rir
+
+          mkdir -p /tmp/rir-overlay/Files/opt/resource
+          cd /tmp/rir
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o /tmp/rir-overlay/Files/opt/resource/check.exe ./cmd/check
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o /tmp/rir-overlay/Files/opt/resource/in.exe ./cmd/in
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o /tmp/rir-overlay/Files/opt/resource/out.exe ./cmd/out
+          cd "$GITHUB_WORKSPACE"
+
+          go run github.com/google/go-containerregistry/cmd/crane@latest export --platform windows/amd64 mcr.microsoft.com/windows/nanoserver:ltsc2022 /tmp/rir-rootfs.tar
+          tar -rf /tmp/rir-rootfs.tar -C /tmp/rir-overlay Files
+
+          outdir=dist/concourse/resource-types/registry-image
+          mkdir -p "$outdir"
+          gzip -1 -c /tmp/rir-rootfs.tar > "$outdir/rootfs.tgz"
+          printf '{"type":"registry-image","version":"%s","privileged":false,"unique_version_history":false}\n' "${rir_version#v}" > "$outdir/resource_metadata.json"
+
+      - name: Package artifact
+        run: |
+          cd dist
+          zip -r ../concourse-windows-amd64.zip concourse
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --prerelease \
+              --title "Windows containerd worker (experimental)" \
+              --notes "Experimental Windows worker binaries with containerd runtime support, built from the feature/containerd-windows branch."
+          fi
+          gh release upload "$RELEASE_TAG" concourse-windows-amd64.zip --repo "$GITHUB_REPOSITORY" --clobber
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --notes "Experimental Windows worker binaries with containerd runtime support, built from the feature/containerd-windows branch at ${GITHUB_SHA}."
