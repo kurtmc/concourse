@@ -10,24 +10,19 @@ import (
 	"strings"
 
 	"github.com/Microsoft/hcsshim"
-	bespec "github.com/concourse/concourse/v8/worker/runtime/spec"
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
 // prepareContainer converts the container's rootfs into Windows container
-// layers and attaches the container to the worker's network. Containers
-// backed by a natively pulled image get their rootfs from the snapshotter
-// and skip layer preparation.
+// layers and attaches the container to the worker's network.
 func (b *GardenBackend) prepareContainer(oci *specs.Spec, handle string) error {
-	if _, native := oci.Annotations[bespec.OCIImageAnnotation]; !native {
-		err := b.prepareRootfs(oci)
-		if err != nil {
-			return fmt.Errorf("prepare rootfs: %w", err)
-		}
+	err := b.prepareRootfs(oci)
+	if err != nil {
+		return fmt.Errorf("prepare rootfs: %w", err)
 	}
 
 	if attacher, ok := b.network.(ContainerAttacher); ok {
-		err := attacher.AttachContainer(handle, oci)
+		err = attacher.AttachContainer(handle, oci)
 		if err != nil {
 			return fmt.Errorf("attach container network: %w", err)
 		}
