@@ -15,6 +15,7 @@ require (
 	github.com/DataDog/datadog-go/v5 v5.9.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.34.0
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/Microsoft/go-winio v0.6.3-0.20251027160822-ad3df93bed29
 	github.com/aryann/difflib v0.0.0-20210328193216-ff5ff6dc229b
 	github.com/aws/aws-sdk-go-v2 v1.43.0
 	github.com/aws/aws-sdk-go-v2/config v1.32.31
@@ -71,6 +72,8 @@ require (
 	github.com/onsi/ginkgo/v2 v2.32.0
 	github.com/onsi/gomega v1.42.1
 	github.com/opencontainers/cgroups v0.0.8
+	github.com/opencontainers/go-digest v1.0.0
+	github.com/opencontainers/image-spec v1.1.1
 	github.com/opencontainers/runtime-spec v1.3.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/peterhellberg/link v1.2.0
@@ -121,7 +124,6 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
-	github.com/Microsoft/go-winio v0.6.3-0.20251027160822-ad3df93bed29 // indirect
 	github.com/Microsoft/hcsshim v0.15.0-rc.1
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d // indirect
@@ -234,8 +236,6 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/openbao/openbao/api/v2 v2.5.1 // indirect
-	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/petermattis/goid v0.0.0-20260330135022-df67b199bc81 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

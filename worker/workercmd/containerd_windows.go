@@ -72,6 +72,7 @@ func (cmd *WorkerCommand) containerdGardenServerRunner(logger lager.Logger, cont
 		runtime.WithRequestTimeout(cmd.Containerd.RequestTimeout),
 		runtime.WithMaxContainers(cmd.Containerd.MaxContainers),
 		runtime.WithInitBinPath(cmd.Containerd.InitBin),
+		runtime.WithLayersDir(filepath.Join(cmd.WorkDir.Path(), "layers")),
 	}
 
 	gardenBackend, err := runtime.NewGardenBackend(

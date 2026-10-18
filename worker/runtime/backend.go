@@ -36,6 +36,7 @@ type GardenBackend struct {
 	ioManager     IOManager
 	userNamespace UserNamespace
 	initBinPath   string
+	layersDir     string
 	// override path for the seccomp profile
 	seccompProfilePath string
 	// content of the upper path, or the default ones (default or privileged)
@@ -110,6 +111,12 @@ func WithRequestTimeout(requestTimeout time.Duration) GardenBackendOpt {
 func WithInitBinPath(initBinPath string) GardenBackendOpt {
 	return func(b *GardenBackend) {
 		b.initBinPath = initBinPath
+	}
+}
+
+func WithLayersDir(dir string) GardenBackendOpt {
+	return func(b *GardenBackend) {
+		b.layersDir = dir
 	}
 }
 

@@ -22,7 +22,7 @@ const InitBinContainerDir = `C:\concourse\bin`
 // spec. The seccomp profiles, OCI hooks, privileged mode, user namespace
 // mappings and device cgroup rules are Linux-only concepts and are ignored.
 //
-// The rootfs directory must contain a valid Windows container layer.
+// The rootfs directory must hold the OCI image layout registry-image writes.
 func OciSpec(initBinPath string, seccomp specs.LinuxSeccomp, seccompFuse specs.LinuxSeccomp, hooks specs.Hooks, privilegedMode PrivilegedMode, gdn garden.ContainerSpec, maxUid, maxGid uint32, extraDevices ...[]specs.LinuxDeviceCgroup) (oci *specs.Spec, err error) {
 	if gdn.Handle == "" {
 		return nil, fmt.Errorf("handle must be specified")
